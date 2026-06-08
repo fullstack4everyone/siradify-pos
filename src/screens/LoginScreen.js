@@ -18,15 +18,19 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Please enter your email and password')
       return
     }
+    console.log('Attempting login with:', email)
     setLoading(true)
     try {
+      console.log('Calling login function...')
       await login(email, password)
+      console.log('Login successful')
       navigation.reset({
         index: 0,
         routes: [{ name: 'POS' }],
       })
     } catch (err) {
-      Alert.alert('Login Failed', 'Invalid email or password')
+      console.log('Login error:', err.message)
+      Alert.alert('Login Failed', err.message)
     } finally {
       setLoading(false)
     }

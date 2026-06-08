@@ -4,7 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import LoginScreen from './src/screens/LoginScreen'
 import POSScreen from './src/screens/POSScreen'
-import { ActivityIndicator, View } from 'react-native'
+import POSScreenWeb from './src/screens/POSScreenWeb'
+import { ActivityIndicator, View, Platform } from 'react-native'
 
 const Stack = createStackNavigator()
 
@@ -19,13 +20,15 @@ function AppNavigator() {
     )
   }
 
+  const POS = Platform.OS === 'web' ? POSScreenWeb : POSScreen
+
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
       initialRouteName={user ? 'POS' : 'Login'}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="POS" component={POSScreen} />
+      <Stack.Screen name="POS" component={POS} />
     </Stack.Navigator>
   )
 }

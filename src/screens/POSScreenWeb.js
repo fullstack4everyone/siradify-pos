@@ -1,22 +1,17 @@
 import {
   View, Text, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, ScrollView,
-  Platform, Dimensions
+  StyleSheet, ActivityIndicator, Alert, ScrollView
 } from 'react-native'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { COLORS } from '../constants/colors'
 
-const { width } = Dimensions.get('window')
-const isPhone = width < 768
-
-export default function POSScreen({ navigation }) {
+export default function POSScreenWeb({ navigation }) {
   const [products, setProducts] = useState([])
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
-  const [view, setView] = useState('products')
   const { user, logout } = useAuth()
 
   useEffect(() => {
@@ -65,6 +60,10 @@ export default function POSScreen({ navigation }) {
     }
   }
 
+  const removeItemCompletely = (productId) => {
+    setCart(cart.filter(item => item.id !== productId))
+  }
+
   const getTotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   }
@@ -93,7 +92,6 @@ export default function POSScreen({ navigation }) {
       await api.post('/orders', { items, payment_method: paymentMethod })
       Alert.alert('Success', `Order placed. Total: KES ${getTotal()}`)
       setCart([])
-      setView('products')
       fetchProducts()
     } catch (err) {
       Alert.alert('Error', 'Could not place order')
@@ -134,19 +132,17 @@ export default function POSScreen({ navigation }) {
     )
   }
 
-  const numColumns = isPhone ? 2 : 3
-
   const renderProducts = () => {
     const rows = []
-    for (let i = 0; i < products.length; i += numColumns) {
-      const row = products.slice(i, i + numColumns)
+    for (let i = 0; i < products.length; i += 3) {
+      const row = products.slice(i, i + 3)
       rows.push(
         <View key={i} style={styles.productRow}>
           {row.map(item => (
             <ProductCard key={item.id} item={item} />
           ))}
-          {row.length < numColumns && (
-            [...Array(numColumns - row.length)].map((_, idx) => (
+          {row.length < 3 && (
+            [...Array(3 - row.length)].map((_, idx) => (
               <View key={`empty-${idx}`} style={[styles.productCard, { opacity: 0 }]} />
             ))
           )}
@@ -155,112 +151,6 @@ export default function POSScreen({ navigation }) {
     }
     return rows
   }
-
-  const ProductsView = () => (
-    <View style={styles.productsSection}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Products</Text>
-        {isPhone && cart.length > 0 && (
-          <TouchableOpacity
-            style={styles.viewCartBtn}
-            onPress={() => setView('cart')}
-          >
-            <Text style={styles.viewCartBtnText}>
-              View Cart ({getTotalItems()})
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      {loading ? (
-        <ActivityIndicator color={COLORS.gold} size="large" style={{ marginTop: 40 }} />
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {renderProducts()}
-        </ScrollView>
-      )}
-    </View>
-  )
-
-  const CartView = () => (
-    <View style={styles.cartSection}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>
-          Cart {cart.length > 0 ? `(${getTotalItems()})` : ''}
-        </Text>
-        {isPhone && (
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => setView('products')}
-          >
-            <Text style={styles.backBtnText}>Products</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {cart.length === 0 ? (
-        <View style={styles.emptyCart}>
-          <Text style={styles.emptyCartEmoji}>🛒</Text>
-          <Text style={styles.emptyCartText}>Cart is empty</Text>
-          <Text style={styles.emptyCartSub}>Tap a product to add</Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
-          {cart.map(item => (
-            <View key={item.id} style={styles.cartItem}>
-              <View style={styles.cartItemInfo}>
-                <Text style={styles.cartItemName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.cartItemPrice}>
-                  KES {(item.price * item.quantity).toLocaleString()}
-                </Text>
-              </View>
-              <View style={styles.cartItemControls}>
-                <TouchableOpacity
-                  style={styles.qtyBtn}
-                  onPress={() => removeFromCart(item.id)}
-                >
-                  <Text style={styles.qtyBtnText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.qtyText}>{item.quantity}</Text>
-                <TouchableOpacity
-                  style={styles.qtyBtn}
-                  onPress={() => addToCart(item)}
-                >
-                  <Text style={styles.qtyBtnText}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      <View style={styles.cartFooter}>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>KES {getTotal().toLocaleString()}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.cashBtn}
-          onPress={() => placeOrder('cash')}
-          disabled={placing}
-        >
-          {placing ? (
-            <ActivityIndicator color={COLORS.navy} />
-          ) : (
-            <Text style={styles.cashBtnText}>💵  Cash Payment</Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.mpesaBtn}
-          onPress={() => placeOrder('mpesa')}
-          disabled={placing}
-        >
-          <Text style={styles.mpesaBtnText}>📱  M-Pesa Payment</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  )
 
   return (
     <View style={styles.container}>
@@ -279,14 +169,93 @@ export default function POSScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {isPhone ? (
-        view === 'products' ? <ProductsView /> : <CartView />
-      ) : (
-        <View style={styles.desktopBody}>
-          <ProductsView />
-          <CartView />
+      <View style={styles.body}>
+        <View style={styles.productsSection}>
+          <Text style={styles.sectionTitle}>Products</Text>
+          {loading ? (
+            <ActivityIndicator color={COLORS.gold} size="large" style={{ marginTop: 40 }} />
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {renderProducts()}
+            </ScrollView>
+          )}
         </View>
-      )}
+
+        <View style={styles.cartSection}>
+          <Text style={styles.sectionTitle}>
+            Cart {cart.length > 0 ? `(${getTotalItems()})` : ''}
+          </Text>
+
+          {cart.length === 0 ? (
+            <View style={styles.emptyCart}>
+              <Text style={styles.emptyCartEmoji}>🛒</Text>
+              <Text style={styles.emptyCartText}>Cart is empty</Text>
+              <Text style={styles.emptyCartSub}>Click a product to add</Text>
+            </View>
+          ) : (
+            <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
+              {cart.map(item => (
+                <View key={item.id} style={styles.cartItem}>
+                  <View style={styles.cartItemInfo}>
+                    <Text style={styles.cartItemName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.cartItemPrice}>
+                      KES {(item.price * item.quantity).toLocaleString()}
+                    </Text>
+                  </View>
+                  <View style={styles.cartItemControls}>
+                    <TouchableOpacity
+                      style={styles.qtyBtn}
+                      onPress={() => removeFromCart(item.id)}
+                    >
+                      <Text style={styles.qtyBtnText}>-</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                    <TouchableOpacity
+                      style={styles.qtyBtn}
+                      onPress={() => addToCart(item)}
+                    >
+                      <Text style={styles.qtyBtnText}>+</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.removeBtn}
+                      onPress={() => removeItemCompletely(item.id)}
+                    >
+                      <Text style={styles.removeBtnText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+
+          <View style={styles.cartFooter}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>KES {getTotal().toLocaleString()}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.cashBtn}
+              onPress={() => placeOrder('cash')}
+              disabled={placing}
+            >
+              {placing ? (
+                <ActivityIndicator color={COLORS.navy} />
+              ) : (
+                <Text style={styles.cashBtnText}>💵  Cash Payment</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.mpesaBtn}
+              onPress={() => placeOrder('mpesa')}
+              disabled={placing}
+            >
+              <Text style={styles.mpesaBtnText}>📱  M-Pesa Payment</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     </View>
   )
 }
@@ -298,9 +267,9 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: COLORS.navy,
-    paddingTop: Platform.OS === 'ios' ? 50 : 40,
-    paddingBottom: 14,
-    paddingHorizontal: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 24,
+    paddingTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -308,11 +277,11 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   logoBox: {
-    width: 38,
-    height: 38,
+    width: 42,
+    height: 42,
     backgroundColor: COLORS.gold,
     borderRadius: 10,
     justifyContent: 'center',
@@ -321,22 +290,22 @@ const styles = StyleSheet.create({
   logoText: {
     color: COLORS.navy,
     fontWeight: '800',
-    fontSize: 18,
+    fontSize: 20,
   },
   headerTitle: {
     color: COLORS.white,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
   headerSub: {
     color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
+    fontSize: 12,
   },
   logoutBtn: {
     borderWidth: 1,
     borderColor: COLORS.gold,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 6,
   },
   logoutText: {
@@ -344,67 +313,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  desktopBody: {
+  body: {
     flex: 1,
     flexDirection: 'row',
   },
   productsSection: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   cartSection: {
-    width: isPhone ? '100%' : 320,
+    width: 340,
     backgroundColor: COLORS.white,
-    padding: 16,
-    borderLeftWidth: isPhone ? 0 : 1,
+    padding: 20,
+    borderLeftWidth: 1,
     borderLeftColor: COLORS.border,
-    flex: isPhone ? 1 : 0,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.navy,
-  },
-  viewCartBtn: {
-    backgroundColor: COLORS.gold,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  viewCartBtnText: {
-    color: COLORS.navy,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  backBtn: {
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  backBtnText: {
-    color: COLORS.navy,
-    fontSize: 13,
-    fontWeight: '600',
+    marginBottom: 16,
   },
   productRow: {
     flexDirection: 'row',
-    marginBottom: 12,
-    gap: 10,
+    marginBottom: 14,
+    gap: 14,
   },
   productCard: {
     flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -415,48 +354,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFBF0',
   },
   productEmoji: {
-    width: 54,
-    height: 54,
+    width: 60,
+    height: 60,
     backgroundColor: COLORS.background,
-    borderRadius: 12,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   productEmojiText: {
-    fontSize: 28,
+    fontSize: 30,
   },
   productName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.textDark,
     textAlign: 'center',
-    marginBottom: 4,
-    lineHeight: 18,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   productPrice: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.navy,
     fontWeight: '700',
     marginBottom: 2,
   },
   productStock: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textGray,
   },
   qtyBadge: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: 10,
+    right: 10,
     backgroundColor: COLORS.gold,
-    borderRadius: 10,
-    width: 22,
-    height: 22,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   qtyBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: COLORS.navy,
   },
@@ -464,11 +403,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
   },
   emptyCartEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+    fontSize: 52,
+    marginBottom: 14,
   },
   emptyCartText: {
     fontSize: 16,
@@ -487,19 +425,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   cartItemInfo: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 10,
   },
   cartItemName: {
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.textDark,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   cartItemPrice: {
     fontSize: 13,
@@ -527,17 +465,30 @@ const styles = StyleSheet.create({
     color: COLORS.navy,
   },
   qtyText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: COLORS.textDark,
     minWidth: 24,
     textAlign: 'center',
   },
+  removeBtn: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
   cartFooter: {
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    gap: 10,
+    gap: 12,
   },
   totalRow: {
     flexDirection: 'row',
@@ -551,13 +502,13 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
   },
   totalValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     color: COLORS.navy,
   },
   cashBtn: {
     backgroundColor: COLORS.gold,
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -568,7 +519,7 @@ const styles = StyleSheet.create({
   },
   mpesaBtn: {
     backgroundColor: COLORS.navy,
-    padding: 15,
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
