@@ -1,7 +1,7 @@
 import {
   View, Text, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, ScrollView,
-  Platform, Dimensions
+  Platform, Dimensions, Modal, TextInput
 } from 'react-native'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -9,7 +9,7 @@ import api from '../services/api'
 import { COLORS } from '../constants/colors'
 
 const { width } = Dimensions.get('window')
-const isPhone = width < 768
+const isPhone = Platform.OS !== 'web' && width < 768
 
 export default function POSScreen({ navigation }) {
   const [products, setProducts] = useState([])
@@ -17,6 +17,8 @@ export default function POSScreen({ navigation }) {
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
   const [view, setView] = useState('products')
+  const [showMpesaModal, setShowMpesaModal] = useState(false)
+  const [mpesaPhone, setMpesaPhone] = useState('')
   const { user, logout } = useAuth()
 
   useEffect(() => {
@@ -65,6 +67,10 @@ export default function POSScreen({ navigation }) {
     }
   }
 
+  const removeItemCompletely = (productId) => {
+    setCart(cart.filter(item => item.id !== productId))
+  }
+
   const getTotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   }
@@ -83,6 +89,10 @@ export default function POSScreen({ navigation }) {
       Alert.alert('Empty Cart', 'Add products to cart first')
       return
     }
+    if (paymentMethod === 'mpesa') {
+      setShowMpesaModal(true)
+      return
+    }
     setPlacing(true)
     try {
       const items = cart.map(item => ({
@@ -97,6 +107,46 @@ export default function POSScreen({ navigation }) {
       fetchProducts()
     } catch (err) {
       Alert.alert('Error', 'Could not place order')
+    } finally {
+      setPlacing(false)
+    }
+  }
+
+  const processMpesaPayment = async () => {
+    if (!mpesaPhone) {
+      Alert.alert('Error', 'Please enter phone number')
+      return
+    }
+    setShowMpesaModal(false)
+    setPlacing(true)
+    try {
+      const items = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }))
+      const orderRes = await api.post('/orders', {
+        items,
+        payment_method: 'mpesa',
+        customer_phone: mpesaPhone
+      })
+      const orderId = orderRes.data.order.id
+      const total = getTotal()
+      await api.post('/mpesa/stkpush', {
+        phone: mpesaPhone,
+        amount: total,
+        order_id: orderId
+      })
+      Alert.alert(
+        'M-Pesa Sent',
+        `Payment request of KES ${total} sent to ${mpesaPhone}. Ask customer to enter PIN.`
+      )
+      setCart([])
+      setMpesaPhone('')
+      setView('products')
+      fetchProducts()
+    } catch (err) {
+      Alert.alert('Error', 'Could not process M-Pesa payment')
     } finally {
       setPlacing(false)
     }
@@ -134,21 +184,17 @@ export default function POSScreen({ navigation }) {
     )
   }
 
-  const numColumns = isPhone ? 2 : 3
-
   const renderProducts = () => {
     const rows = []
-    for (let i = 0; i < products.length; i += numColumns) {
-      const row = products.slice(i, i + numColumns)
+    for (let i = 0; i < products.length; i += 2) {
+      const row = products.slice(i, i + 2)
       rows.push(
         <View key={i} style={styles.productRow}>
           {row.map(item => (
             <ProductCard key={item.id} item={item} />
           ))}
-          {row.length < numColumns && (
-            [...Array(numColumns - row.length)].map((_, idx) => (
-              <View key={`empty-${idx}`} style={[styles.productCard, { opacity: 0 }]} />
-            ))
+          {row.length < 2 && (
+            <View style={[styles.productCard, { opacity: 0 }]} />
           )}
         </View>
       )
@@ -160,13 +206,13 @@ export default function POSScreen({ navigation }) {
     <View style={styles.productsSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Products</Text>
-        {isPhone && cart.length > 0 && (
+        {cart.length > 0 && (
           <TouchableOpacity
             style={styles.viewCartBtn}
             onPress={() => setView('cart')}
           >
             <Text style={styles.viewCartBtnText}>
-              View Cart ({getTotalItems()})
+              Cart ({getTotalItems()})
             </Text>
           </TouchableOpacity>
         )}
@@ -187,14 +233,12 @@ export default function POSScreen({ navigation }) {
         <Text style={styles.sectionTitle}>
           Cart {cart.length > 0 ? `(${getTotalItems()})` : ''}
         </Text>
-        {isPhone && (
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => setView('products')}
-          >
-            <Text style={styles.backBtnText}>Products</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => setView('products')}
+        >
+          <Text style={styles.backBtnText}>← Products</Text>
+        </TouchableOpacity>
       </View>
 
       {cart.length === 0 ? (
@@ -228,6 +272,12 @@ export default function POSScreen({ navigation }) {
                   onPress={() => addToCart(item)}
                 >
                   <Text style={styles.qtyBtnText}>+</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => removeItemCompletely(item.id)}
+                >
+                  <Text style={styles.removeBtnText}>✕</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -264,6 +314,47 @@ export default function POSScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+
+      <Modal
+        visible={showMpesaModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMpesaModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>M-Pesa Payment</Text>
+            <Text style={styles.modalSubtitle}>
+              Total: KES {getTotal().toLocaleString()}
+            </Text>
+            <Text style={styles.modalLabel}>Customer Phone Number</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={mpesaPhone}
+              onChangeText={setMpesaPhone}
+              placeholder="e.g. 0712345678"
+              placeholderTextColor={COLORS.textGray}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity
+              style={styles.modalConfirmBtn}
+              onPress={processMpesaPayment}
+            >
+              <Text style={styles.modalConfirmText}>Send M-Pesa Request</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => {
+                setShowMpesaModal(false)
+                setMpesaPhone('')
+              }}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoBox}>
@@ -279,14 +370,8 @@ export default function POSScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {isPhone ? (
-        view === 'products' ? <ProductsView /> : <CartView />
-      ) : (
-        <View style={styles.desktopBody}>
-          <ProductsView />
-          <CartView />
-        </View>
-      )}
+      {view === 'products' ? <ProductsView /> : <CartView />}
+
     </View>
   )
 }
@@ -295,6 +380,76 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 6,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: COLORS.gold,
+    fontWeight: '700',
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textDark,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  modalInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 14,
+    fontSize: 16,
+    color: COLORS.textDark,
+    marginBottom: 16,
+  },
+  modalConfirmBtn: {
+    width: '100%',
+    backgroundColor: COLORS.navy,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalConfirmText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalCancelBtn: {
+    width: '100%',
+    backgroundColor: COLORS.background,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalCancelText: {
+    color: COLORS.textGray,
+    fontSize: 14,
+    fontWeight: '600',
   },
   header: {
     backgroundColor: COLORS.navy,
@@ -344,21 +499,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  desktopBody: {
-    flex: 1,
-    flexDirection: 'row',
-  },
   productsSection: {
     flex: 1,
     padding: 16,
   },
   cartSection: {
-    width: isPhone ? '100%' : 320,
+    flex: 1,
     backgroundColor: COLORS.white,
     padding: 16,
-    borderLeftWidth: isPhone ? 0 : 1,
-    borderLeftColor: COLORS.border,
-    flex: isPhone ? 1 : 0,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -398,7 +546,7 @@ const styles = StyleSheet.create({
   productRow: {
     flexDirection: 'row',
     marginBottom: 12,
-    gap: 10,
+    gap: 12,
   },
   productCard: {
     flex: 1,
@@ -532,6 +680,19 @@ const styles = StyleSheet.create({
     color: COLORS.textDark,
     minWidth: 24,
     textAlign: 'center',
+  },
+  removeBtn: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#DC2626',
   },
   cartFooter: {
     paddingTop: 16,

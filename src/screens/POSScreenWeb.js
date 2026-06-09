@@ -1,6 +1,7 @@
 import {
   View, Text, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert, ScrollView
+  StyleSheet, ActivityIndicator, Alert, ScrollView,
+  TextInput, Modal
 } from 'react-native'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +13,8 @@ export default function POSScreenWeb({ navigation }) {
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
+  const [showMpesaModal, setShowMpesaModal] = useState(false)
+  const [mpesaPhone, setMpesaPhone] = useState('')
   const { user, logout } = useAuth()
 
   useEffect(() => {
@@ -82,6 +85,10 @@ export default function POSScreenWeb({ navigation }) {
       Alert.alert('Empty Cart', 'Add products to cart first')
       return
     }
+    if (paymentMethod === 'mpesa') {
+      setShowMpesaModal(true)
+      return
+    }
     setPlacing(true)
     try {
       const items = cart.map(item => ({
@@ -95,6 +102,45 @@ export default function POSScreenWeb({ navigation }) {
       fetchProducts()
     } catch (err) {
       Alert.alert('Error', 'Could not place order')
+    } finally {
+      setPlacing(false)
+    }
+  }
+
+  const processMpesaPayment = async () => {
+    if (!mpesaPhone) {
+      Alert.alert('Error', 'Please enter phone number')
+      return
+    }
+    setShowMpesaModal(false)
+    setPlacing(true)
+    try {
+      const items = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price
+      }))
+      const orderRes = await api.post('/orders', {
+        items,
+        payment_method: 'mpesa',
+        customer_phone: mpesaPhone
+      })
+      const orderId = orderRes.data.order.id
+      const total = getTotal()
+      await api.post('/mpesa/stkpush', {
+        phone: mpesaPhone,
+        amount: total,
+        order_id: orderId
+      })
+      Alert.alert(
+        'M-Pesa Request Sent',
+        `Payment request of KES ${total} sent to ${mpesaPhone}. Ask customer to enter their M-Pesa PIN.`
+      )
+      setCart([])
+      setMpesaPhone('')
+      fetchProducts()
+    } catch (err) {
+      Alert.alert('Error', 'Could not process M-Pesa payment')
     } finally {
       setPlacing(false)
     }
@@ -154,6 +200,47 @@ export default function POSScreenWeb({ navigation }) {
 
   return (
     <View style={styles.container}>
+
+      <Modal
+        visible={showMpesaModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMpesaModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>M-Pesa Payment</Text>
+            <Text style={styles.modalSubtitle}>
+              Total: KES {getTotal().toLocaleString()}
+            </Text>
+            <Text style={styles.modalLabel}>Customer Phone Number</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={mpesaPhone}
+              onChangeText={setMpesaPhone}
+              placeholder="e.g. 0712345678"
+              placeholderTextColor={COLORS.textGray}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity
+              style={styles.modalConfirmBtn}
+              onPress={processMpesaPayment}
+            >
+              <Text style={styles.modalConfirmText}>Send M-Pesa Request</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => {
+                setShowMpesaModal(false)
+                setMpesaPhone('')
+              }}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.logoBox}>
@@ -264,6 +351,75 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 28,
+    width: 380,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.navy,
+    marginBottom: 6,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: COLORS.gold,
+    fontWeight: '700',
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textDark,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  modalInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: COLORS.textDark,
+    marginBottom: 16,
+  },
+  modalConfirmBtn: {
+    width: '100%',
+    backgroundColor: COLORS.navy,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalConfirmText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalCancelBtn: {
+    width: '100%',
+    backgroundColor: COLORS.background,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalCancelText: {
+    color: COLORS.textGray,
+    fontSize: 14,
+    fontWeight: '600',
   },
   header: {
     backgroundColor: COLORS.navy,
