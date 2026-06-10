@@ -100,11 +100,12 @@ export default function POSScreen({ navigation }) {
         quantity: item.quantity,
         price: item.price
       }))
-      await api.post('/orders', { items, payment_method: paymentMethod })
-      Alert.alert('Success', `Order placed. Total: KES ${getTotal()}`)
+      const res = await api.post('/orders', { items, payment_method: paymentMethod })
       setCart([])
-      setView('products')
-      fetchProducts()
+      navigation.navigate('Receipt', {
+        order: res.data.order,
+        items: res.data.items,
+      })
     } catch (err) {
       Alert.alert('Error', 'Could not place order')
     } finally {
@@ -137,14 +138,12 @@ export default function POSScreen({ navigation }) {
         amount: total,
         order_id: orderId
       })
-      Alert.alert(
-        'M-Pesa Sent',
-        `Payment request of KES ${total} sent to ${mpesaPhone}. Ask customer to enter PIN.`
-      )
       setCart([])
       setMpesaPhone('')
-      setView('products')
-      fetchProducts()
+      navigation.navigate('Receipt', {
+        order: { ...orderRes.data.order, payment_status: 'pending' },
+        items: orderRes.data.items,
+      })
     } catch (err) {
       Alert.alert('Error', 'Could not process M-Pesa payment')
     } finally {

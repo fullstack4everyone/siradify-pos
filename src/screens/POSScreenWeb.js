@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import { COLORS } from '../constants/colors'
+import ReceiptCard from '../components/ReceiptCard'
 
 export default function POSScreenWeb({ navigation }) {
   const [products, setProducts] = useState([])
@@ -15,6 +16,7 @@ export default function POSScreenWeb({ navigation }) {
   const [placing, setPlacing] = useState(false)
   const [showMpesaModal, setShowMpesaModal] = useState(false)
   const [mpesaPhone, setMpesaPhone] = useState('')
+  const [receipt, setReceipt] = useState(null)
   const { user, logout } = useAuth()
 
   useEffect(() => {
@@ -96,9 +98,9 @@ export default function POSScreenWeb({ navigation }) {
         quantity: item.quantity,
         price: item.price
       }))
-      await api.post('/orders', { items, payment_method: paymentMethod })
-      Alert.alert('Success', `Order placed. Total: KES ${getTotal()}`)
+      const res = await api.post('/orders', { items, payment_method: paymentMethod })
       setCart([])
+      setReceipt({ order: res.data.order, items: res.data.items })
       fetchProducts()
     } catch (err) {
       Alert.alert('Error', 'Could not place order')
@@ -132,12 +134,12 @@ export default function POSScreenWeb({ navigation }) {
         amount: total,
         order_id: orderId
       })
-      Alert.alert(
-        'M-Pesa Request Sent',
-        `Payment request of KES ${total} sent to ${mpesaPhone}. Ask customer to enter their M-Pesa PIN.`
-      )
       setCart([])
       setMpesaPhone('')
+      setReceipt({
+        order: { ...orderRes.data.order, payment_status: 'pending' },
+        items: orderRes.data.items
+      })
       fetchProducts()
     } catch (err) {
       Alert.alert('Error', 'Could not process M-Pesa payment')
@@ -196,6 +198,39 @@ export default function POSScreenWeb({ navigation }) {
       )
     }
     return rows
+  }
+
+  if (receipt) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <View style={styles.logoBox}>
+              <Text style={styles.logoText}>S</Text>
+            </View>
+            <Text style={styles.headerTitle}>Receipt</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={() => setReceipt(null)}
+          >
+            <Text style={styles.logoutText}>New Order</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.receiptScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ReceiptCard order={receipt.order} items={receipt.items} />
+          <TouchableOpacity
+            style={styles.startNewOrderBtn}
+            onPress={() => setReceipt(null)}
+          >
+            <Text style={styles.startNewOrderText}>Start New Order</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    )
   }
 
   return (
@@ -351,6 +386,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  receiptScrollContent: {
+    padding: 24,
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+  },
+  startNewOrderBtn: {
+    backgroundColor: COLORS.navy,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 16,
+    width: '100%',
+    maxWidth: 360,
+  },
+  startNewOrderText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
