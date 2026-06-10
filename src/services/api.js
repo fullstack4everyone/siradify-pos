@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Platform } from 'react-native'
 
 const BASE_URL = Platform.OS === 'web'
-  ? 'http://localhost:5000/api'
-  : 'http://192.168.0.112:5000/api'
+  ? 'https://siradify-api-production.up.railway.app/api'
+  : 'https://siradify-api-production.up.railway.app/api'
 
 console.log('API URL:', BASE_URL)
 console.log('Platform:', Platform.OS)
