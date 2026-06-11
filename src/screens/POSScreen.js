@@ -364,9 +364,17 @@ export default function POSScreen({ navigation }) {
             <Text style={styles.headerSub}>Hi, {user?.name}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.ordersBtn}
+            onPress={() => navigation.navigate('Orders')}
+          >
+            <Text style={styles.ordersBtnText}>🧾 Orders</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {view === 'products' ? <ProductsView /> : <CartView />}
@@ -464,6 +472,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   logoBox: {
     width: 38,
     height: 38,
@@ -485,6 +498,18 @@ const styles = StyleSheet.create({
   headerSub: {
     color: 'rgba(255,255,255,0.6)',
     fontSize: 11,
+  },
+  ordersBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 6,
+  },
+  ordersBtnText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
   },
   logoutBtn: {
     borderWidth: 1,
