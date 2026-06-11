@@ -25,6 +25,13 @@ export default function POSScreen({ navigation }) {
     fetchProducts()
   }, [])
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchProducts()
+    })
+    return unsubscribe
+  }, [navigation])
+
   const fetchProducts = async () => {
     try {
       const res = await api.get('/products')
@@ -366,6 +373,12 @@ export default function POSScreen({ navigation }) {
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
+            style={styles.addProductBtn}
+            onPress={() => navigation.navigate('AddProduct')}
+          >
+            <Text style={styles.addProductBtnText}>+ Product</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.ordersBtn}
             onPress={() => navigation.navigate('Orders')}
           >
@@ -499,10 +512,23 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 11,
   },
+  addProductBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 6,
+    backgroundColor: 'rgba(245,166,35,0.15)',
+  },
+  addProductBtnText: {
+    color: COLORS.gold,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   ordersBtn: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 6,
   },
@@ -514,13 +540,13 @@ const styles = StyleSheet.create({
   logoutBtn: {
     borderWidth: 1,
     borderColor: COLORS.gold,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 6,
   },
   logoutText: {
     color: COLORS.gold,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   productsSection: {

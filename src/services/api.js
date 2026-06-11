@@ -11,6 +11,7 @@ console.log('Platform:', Platform.OS)
 
 const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 30000,
 })
 
 api.interceptors.request.use(async (config) => {

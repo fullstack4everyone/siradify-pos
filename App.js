@@ -7,6 +7,7 @@ import POSScreen from './src/screens/POSScreen'
 import POSScreenWeb from './src/screens/POSScreenWeb'
 import ReceiptScreen from './src/screens/ReceiptScreen'
 import OrdersScreen from './src/screens/OrdersScreen'
+import AddProductScreen from './src/screens/AddProductScreen'
 import { ActivityIndicator, View, Platform } from 'react-native'
 
 const Stack = createStackNavigator()
@@ -33,6 +34,7 @@ function AppNavigator() {
       <Stack.Screen name="POS" component={POS} />
       <Stack.Screen name="Receipt" component={ReceiptScreen} />
       <Stack.Screen name="Orders" component={OrdersScreen} />
+      <Stack.Screen name="AddProduct" component={AddProductScreen} />
     </Stack.Navigator>
   )
 }

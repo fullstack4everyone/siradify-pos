@@ -315,7 +315,11 @@ export default function POSScreenWeb({ navigation }) {
               <Text style={styles.emptyCartSub}>Click a product to add</Text>
             </View>
           ) : (
-            <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
+           <ScrollView
+            contentContainerStyle={styles.receiptScrollContent}
+            showsVerticalScrollIndicator={true}
+            style={{ flex: 1 }}
+          >
               {cart.map(item => (
                 <View key={item.id} style={styles.cartItem}>
                   <View style={styles.cartItemInfo}>
@@ -483,6 +487,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    height: 74,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -524,25 +529,41 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   body: {
-    flex: 1,
     flexDirection: 'row',
+    position: 'absolute',
+    top: 74,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   productsSection: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 340,
+    bottom: 0,
     padding: 20,
   },
   cartSection: {
     width: 340,
     backgroundColor: COLORS.white,
-    padding: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
     borderLeftWidth: 1,
     borderLeftColor: COLORS.border,
+    flexDirection: 'column',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: COLORS.navy,
     marginBottom: 16,
+    flexShrink: 0,
   },
   productRow: {
     flexDirection: 'row',
@@ -696,9 +717,11 @@ const styles = StyleSheet.create({
   },
   cartFooter: {
     paddingTop: 16,
+    paddingBottom: 20,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     gap: 12,
+    flexShrink: 0,
   },
   totalRow: {
     flexDirection: 'row',
