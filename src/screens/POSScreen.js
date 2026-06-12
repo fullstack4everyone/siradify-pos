@@ -380,6 +380,14 @@ export default function POSScreen({ navigation }) {
           </View>
         </View>
         <View style={styles.headerRight}>
+          {user?.role === 'admin' && (
+            <TouchableOpacity
+              style={styles.adminBtn}
+              onPress={() => navigation.navigate('Admin')}
+            >
+              <Text style={styles.adminBtnText}>⚙️ Admin</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={styles.addProductBtn}
             onPress={() => navigation.navigate('AddProduct')}
@@ -390,10 +398,10 @@ export default function POSScreen({ navigation }) {
             style={styles.ordersBtn}
             onPress={() => navigation.navigate('Orders')}
           >
-            <Text style={styles.ordersBtnText}>🧾 Orders</Text>
+            <Text style={styles.ordersBtnText}>🧾</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>Exit</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -496,7 +504,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   logoBox: {
     width: 38,
@@ -520,41 +528,53 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 11,
   },
+  adminBtn: {
+    borderWidth: 1,
+    borderColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+  },
+  adminBtnText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   addProductBtn: {
     borderWidth: 1,
     borderColor: COLORS.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: 'rgba(245,166,35,0.15)',
   },
   addProductBtnText: {
     color: COLORS.gold,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   ordersBtn: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderRadius: 6,
   },
   ordersBtnText: {
     color: COLORS.white,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
   },
   logoutBtn: {
     borderWidth: 1,
     borderColor: COLORS.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderRadius: 6,
   },
   logoutText: {
     color: COLORS.gold,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   productsSection: {
