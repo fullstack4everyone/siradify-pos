@@ -1,7 +1,7 @@
 import {
   View, Text, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, ScrollView,
-  TextInput, Modal
+  TextInput, Modal, Image
 } from 'react-native'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -161,13 +161,21 @@ export default function POSScreenWeb({ navigation }) {
         onPress={() => addToCart(item)}
         activeOpacity={0.7}
       >
-        <View style={styles.productEmoji}>
-          <Text style={styles.productEmojiText}>
-            {item.category === 'drinks' ? '🥤' :
-             item.category === 'food' ? '🍽️' :
-             item.category === 'electronics' ? '📱' : '📦'}
-          </Text>
-        </View>
+        {item.image_url ? (
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.productImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.productEmoji}>
+            <Text style={styles.productEmojiText}>
+              {item.category === 'drinks' ? '🥤' :
+               item.category === 'food' ? '🍽️' :
+               item.category === 'electronics' ? '📱' : '📦'}
+            </Text>
+          </View>
+        )}
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.productPrice}>KES {item.price.toLocaleString()}</Text>
         <Text style={styles.productStock}>{item.stock} left</Text>
@@ -220,6 +228,7 @@ export default function POSScreenWeb({ navigation }) {
         <ScrollView
           contentContainerStyle={styles.receiptScrollContent}
           showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
         >
           <ReceiptCard order={receipt.order} items={receipt.items} />
           <TouchableOpacity
@@ -315,11 +324,10 @@ export default function POSScreenWeb({ navigation }) {
               <Text style={styles.emptyCartSub}>Click a product to add</Text>
             </View>
           ) : (
-           <ScrollView
-            contentContainerStyle={styles.receiptScrollContent}
-            showsVerticalScrollIndicator={true}
-            style={{ flex: 1 }}
-          >
+            <ScrollView
+              style={styles.cartList}
+              showsVerticalScrollIndicator={false}
+            >
               {cart.map(item => (
                 <View key={item.id} style={styles.cartItem}>
                   <View style={styles.cartItemInfo}>
@@ -583,6 +591,12 @@ const styles = StyleSheet.create({
   productCardActive: {
     borderColor: COLORS.gold,
     backgroundColor: '#FFFBF0',
+  },
+  productImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 14,
+    marginBottom: 10,
   },
   productEmoji: {
     width: 60,

@@ -1,7 +1,7 @@
 import {
   View, Text, TouchableOpacity,
   StyleSheet, Alert, ScrollView,
-  Platform, TextInput, ActivityIndicator
+  Platform, TextInput, ActivityIndicator, Image
 } from 'react-native'
 import { useState } from 'react'
 import api from '../services/api'
@@ -19,6 +19,7 @@ export default function AddProductScreen({ navigation }) {
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
   const [category, setCategory] = useState('other')
+  const [imageUrl, setImageUrl] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
@@ -42,6 +43,7 @@ export default function AddProductScreen({ navigation }) {
         price: parseFloat(price),
         stock: parseInt(stock),
         category,
+        image_url: imageUrl.trim() || null,
       })
       console.log('Product created:', res.data)
       Alert.alert('Success', `${name} added successfully`, [
@@ -51,6 +53,7 @@ export default function AddProductScreen({ navigation }) {
             setPrice('')
             setStock('')
             setCategory('other')
+            setImageUrl('')
           }
         },
         { text: 'Go to POS', onPress: () => navigation.goBack() }
@@ -71,6 +74,7 @@ export default function AddProductScreen({ navigation }) {
                 setPrice('')
                 setStock('')
                 setCategory('other')
+                setImageUrl('')
               }
             },
             { text: 'Go to POS', onPress: () => navigation.goBack() }
@@ -133,6 +137,17 @@ export default function AddProductScreen({ navigation }) {
             keyboardType="numeric"
           />
 
+          <Text style={styles.label}>Image URL (optional)</Text>
+          <TextInput
+            style={styles.input}
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            placeholder="https://example.com/image.jpg"
+            placeholderTextColor={COLORS.textGray}
+            autoCapitalize="none"
+            keyboardType="url"
+          />
+
           <Text style={styles.label}>Category</Text>
           <View style={styles.categoryGrid}>
             {CATEGORIES.map(cat => (
@@ -159,20 +174,24 @@ export default function AddProductScreen({ navigation }) {
         <View style={styles.previewCard}>
           <Text style={styles.previewTitle}>Preview</Text>
           <View style={styles.previewProduct}>
-            <View style={styles.previewEmoji}>
-              <Text style={styles.previewEmojiText}>
-                {category === 'drinks' ? '🥤' :
-                 category === 'food' ? '🍽️' :
-                 category === 'electronics' ? '📱' : '📦'}
-              </Text>
-            </View>
+            {imageUrl ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.previewImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.previewEmoji}>
+                <Text style={styles.previewEmojiText}>
+                  {category === 'drinks' ? '🥤' :
+                   category === 'food' ? '🍽️' :
+                   category === 'electronics' ? '📱' : '📦'}
+                </Text>
+              </View>
+            )}
             <Text style={styles.previewName}>{name || 'Product Name'}</Text>
-            <Text style={styles.previewPrice}>
-              KES {price || '0'}
-            </Text>
-            <Text style={styles.previewStock}>
-              {stock || '0'} left
-            </Text>
+            <Text style={styles.previewPrice}>KES {price || '0'}</Text>
+            <Text style={styles.previewStock}>{stock || '0'} left</Text>
           </View>
         </View>
 
@@ -303,6 +322,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#FFFBF0',
     width: '60%',
+  },
+  previewImage: {
+    width: 54,
+    height: 54,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   previewEmoji: {
     width: 54,

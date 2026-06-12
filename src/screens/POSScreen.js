@@ -1,7 +1,7 @@
 import {
   View, Text, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, ScrollView,
-  Platform, Dimensions, Modal, TextInput
+  Platform, Dimensions, Modal, TextInput, Image
 } from 'react-native'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
@@ -171,13 +171,21 @@ export default function POSScreen({ navigation }) {
         onPress={() => addToCart(item)}
         activeOpacity={0.7}
       >
-        <View style={styles.productEmoji}>
-          <Text style={styles.productEmojiText}>
-            {item.category === 'drinks' ? '🥤' :
-             item.category === 'food' ? '🍽️' :
-             item.category === 'electronics' ? '📱' : '📦'}
-          </Text>
-        </View>
+        {item.image_url ? (
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.productImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.productEmoji}>
+            <Text style={styles.productEmojiText}>
+              {item.category === 'drinks' ? '🥤' :
+               item.category === 'food' ? '🍽️' :
+               item.category === 'electronics' ? '📱' : '📦'}
+            </Text>
+          </View>
+        )}
         <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.productPrice}>KES {item.price.toLocaleString()}</Text>
         <Text style={styles.productStock}>{item.stock} left</Text>
@@ -611,6 +619,12 @@ const styles = StyleSheet.create({
   productCardActive: {
     borderColor: COLORS.gold,
     backgroundColor: '#FFFBF0',
+  },
+  productImage: {
+    width: 54,
+    height: 54,
+    borderRadius: 12,
+    marginBottom: 8,
   },
   productEmoji: {
     width: 54,
