@@ -162,11 +162,7 @@ export default function POSScreenWeb({ navigation }) {
         activeOpacity={0.7}
       >
         {item.image_url ? (
-          <Image
-            source={{ uri: item.image_url }}
-            style={styles.productImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: item.image_url }} style={styles.productImage} resizeMode="cover" />
         ) : (
           <View style={styles.productEmoji}>
             <Text style={styles.productEmojiText}>
@@ -194,9 +190,7 @@ export default function POSScreenWeb({ navigation }) {
       const row = products.slice(i, i + 3)
       rows.push(
         <View key={i} style={styles.productRow}>
-          {row.map(item => (
-            <ProductCard key={item.id} item={item} />
-          ))}
+          {row.map(item => (<ProductCard key={item.id} item={item} />))}
           {row.length < 3 && (
             [...Array(3 - row.length)].map((_, idx) => (
               <View key={`empty-${idx}`} style={[styles.productCard, { opacity: 0 }]} />
@@ -218,23 +212,13 @@ export default function POSScreenWeb({ navigation }) {
             </View>
             <Text style={styles.headerTitle}>Receipt</Text>
           </View>
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            onPress={() => setReceipt(null)}
-          >
+          <TouchableOpacity style={styles.logoutBtn} onPress={() => setReceipt(null)}>
             <Text style={styles.logoutText}>New Order</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView
-          contentContainerStyle={styles.receiptScrollContent}
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
-        >
+        <ScrollView contentContainerStyle={styles.receiptScrollContent} showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
           <ReceiptCard order={receipt.order} items={receipt.items} />
-          <TouchableOpacity
-            style={styles.startNewOrderBtn}
-            onPress={() => setReceipt(null)}
-          >
+          <TouchableOpacity style={styles.startNewOrderBtn} onPress={() => setReceipt(null)}>
             <Text style={styles.startNewOrderText}>Start New Order</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -245,40 +229,17 @@ export default function POSScreenWeb({ navigation }) {
   return (
     <View style={styles.container}>
 
-      <Modal
-        visible={showMpesaModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowMpesaModal(false)}
-      >
+      <Modal visible={showMpesaModal} transparent animationType="fade" onRequestClose={() => setShowMpesaModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>M-Pesa Payment</Text>
-            <Text style={styles.modalSubtitle}>
-              Total: KES {getTotal().toLocaleString()}
-            </Text>
+            <Text style={styles.modalSubtitle}>Total: KES {getTotal().toLocaleString()}</Text>
             <Text style={styles.modalLabel}>Customer Phone Number</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={mpesaPhone}
-              onChangeText={setMpesaPhone}
-              placeholder="e.g. 0712345678"
-              placeholderTextColor={COLORS.textGray}
-              keyboardType="phone-pad"
-            />
-            <TouchableOpacity
-              style={styles.modalConfirmBtn}
-              onPress={processMpesaPayment}
-            >
+            <TextInput style={styles.modalInput} value={mpesaPhone} onChangeText={setMpesaPhone} placeholder="e.g. 0712345678" placeholderTextColor={COLORS.textGray} keyboardType="phone-pad" />
+            <TouchableOpacity style={styles.modalConfirmBtn} onPress={processMpesaPayment}>
               <Text style={styles.modalConfirmText}>Send M-Pesa Request</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalCancelBtn}
-              onPress={() => {
-                setShowMpesaModal(false)
-                setMpesaPhone('')
-              }}
-            >
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => { setShowMpesaModal(false); setMpesaPhone('') }}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -295,9 +256,19 @@ export default function POSScreenWeb({ navigation }) {
             <Text style={styles.headerSub}>Hi, {user?.name}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {user?.role === 'admin' && (
+            <TouchableOpacity
+              style={[styles.logoutBtn, { borderColor: COLORS.gold, backgroundColor: 'rgba(245,166,35,0.15)' }]}
+              onPress={() => navigation.navigate('AddProduct')}
+            >
+              <Text style={[styles.logoutText, { color: COLORS.gold }]}>+ Product</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.body}>
@@ -324,38 +295,22 @@ export default function POSScreenWeb({ navigation }) {
               <Text style={styles.emptyCartSub}>Click a product to add</Text>
             </View>
           ) : (
-            <ScrollView
-              style={styles.cartList}
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
               {cart.map(item => (
                 <View key={item.id} style={styles.cartItem}>
                   <View style={styles.cartItemInfo}>
-                    <Text style={styles.cartItemName} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.cartItemPrice}>
-                      KES {(item.price * item.quantity).toLocaleString()}
-                    </Text>
+                    <Text style={styles.cartItemName} numberOfLines={1}>{item.name}</Text>
+                    <Text style={styles.cartItemPrice}>KES {(item.price * item.quantity).toLocaleString()}</Text>
                   </View>
                   <View style={styles.cartItemControls}>
-                    <TouchableOpacity
-                      style={styles.qtyBtn}
-                      onPress={() => removeFromCart(item.id)}
-                    >
+                    <TouchableOpacity style={styles.qtyBtn} onPress={() => removeFromCart(item.id)}>
                       <Text style={styles.qtyBtnText}>-</Text>
                     </TouchableOpacity>
                     <Text style={styles.qtyText}>{item.quantity}</Text>
-                    <TouchableOpacity
-                      style={styles.qtyBtn}
-                      onPress={() => addToCart(item)}
-                    >
+                    <TouchableOpacity style={styles.qtyBtn} onPress={() => addToCart(item)}>
                       <Text style={styles.qtyBtnText}>+</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.removeBtn}
-                      onPress={() => removeItemCompletely(item.id)}
-                    >
+                    <TouchableOpacity style={styles.removeBtn} onPress={() => removeItemCompletely(item.id)}>
                       <Text style={styles.removeBtnText}>✕</Text>
                     </TouchableOpacity>
                   </View>
@@ -369,22 +324,10 @@ export default function POSScreenWeb({ navigation }) {
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>KES {getTotal().toLocaleString()}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.cashBtn}
-              onPress={() => placeOrder('cash')}
-              disabled={placing}
-            >
-              {placing ? (
-                <ActivityIndicator color={COLORS.navy} />
-              ) : (
-                <Text style={styles.cashBtnText}>💵  Cash Payment</Text>
-              )}
+            <TouchableOpacity style={styles.cashBtn} onPress={() => placeOrder('cash')} disabled={placing}>
+              {placing ? <ActivityIndicator color={COLORS.navy} /> : <Text style={styles.cashBtnText}>💵  Cash Payment</Text>}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.mpesaBtn}
-              onPress={() => placeOrder('mpesa')}
-              disabled={placing}
-            >
+            <TouchableOpacity style={styles.mpesaBtn} onPress={() => placeOrder('mpesa')} disabled={placing}>
               <Text style={styles.mpesaBtnText}>📱  M-Pesa Payment</Text>
             </TouchableOpacity>
           </View>
@@ -395,384 +338,64 @@ export default function POSScreenWeb({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  receiptScrollContent: {
-    padding: 24,
-    alignItems: 'center',
-    backgroundColor: '#F0F0F0',
-  },
-  startNewOrderBtn: {
-    backgroundColor: COLORS.navy,
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 16,
-    width: '100%',
-    maxWidth: 360,
-  },
-  startNewOrderText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 28,
-    width: 380,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.navy,
-    marginBottom: 6,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: COLORS.gold,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  modalLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textDark,
-    marginBottom: 8,
-    alignSelf: 'flex-start',
-  },
-  modalInput: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: COLORS.textDark,
-    marginBottom: 16,
-  },
-  modalConfirmBtn: {
-    width: '100%',
-    backgroundColor: COLORS.navy,
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  modalConfirmText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  modalCancelBtn: {
-    width: '100%',
-    backgroundColor: COLORS.background,
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  modalCancelText: {
-    color: COLORS.textGray,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  header: {
-    backgroundColor: COLORS.navy,
-    paddingBottom: 16,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 74,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  logoBox: {
-    width: 42,
-    height: 42,
-    backgroundColor: COLORS.gold,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    color: COLORS.navy,
-    fontWeight: '800',
-    fontSize: 20,
-  },
-  headerTitle: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerSub: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 12,
-  },
-  logoutBtn: {
-    borderWidth: 1,
-    borderColor: COLORS.gold,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  logoutText: {
-    color: COLORS.gold,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  body: {
-    flexDirection: 'row',
-    position: 'absolute',
-    top: 74,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  productsSection: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 340,
-    bottom: 0,
-    padding: 20,
-  },
-  cartSection: {
-    width: 340,
-    backgroundColor: COLORS.white,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 0,
-    borderLeftWidth: 1,
-    borderLeftColor: COLORS.border,
-    flexDirection: 'column',
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.navy,
-    marginBottom: 16,
-    flexShrink: 0,
-  },
-  productRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-    gap: 14,
-  },
-  productCard: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    position: 'relative',
-  },
-  productCardActive: {
-    borderColor: COLORS.gold,
-    backgroundColor: '#FFFBF0',
-  },
-  productImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 14,
-    marginBottom: 10,
-  },
-  productEmoji: {
-    width: 60,
-    height: 60,
-    backgroundColor: COLORS.background,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  productEmojiText: {
-    fontSize: 30,
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textDark,
-    textAlign: 'center',
-    marginBottom: 6,
-    lineHeight: 20,
-  },
-  productPrice: {
-    fontSize: 15,
-    color: COLORS.navy,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  productStock: {
-    fontSize: 12,
-    color: COLORS.textGray,
-  },
-  qtyBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: COLORS.gold,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  qtyBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  emptyCart: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyCartEmoji: {
-    fontSize: 52,
-    marginBottom: 14,
-  },
-  emptyCartText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.textGray,
-    marginBottom: 4,
-  },
-  emptyCartSub: {
-    fontSize: 13,
-    color: COLORS.textGray,
-  },
-  cartList: {
-    flex: 1,
-  },
-  cartItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  cartItemInfo: {
-    flex: 1,
-    marginRight: 10,
-  },
-  cartItemName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textDark,
-    marginBottom: 3,
-  },
-  cartItemPrice: {
-    fontSize: 13,
-    color: COLORS.gold,
-    fontWeight: '700',
-  },
-  cartItemControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  qtyBtn: {
-    width: 32,
-    height: 32,
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  qtyBtnText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.navy,
-  },
-  qtyText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textDark,
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  removeBtn: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  removeBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#DC2626',
-  },
-  cartFooter: {
-    paddingTop: 16,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    gap: 12,
-    flexShrink: 0,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.textDark,
-  },
-  totalValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: COLORS.navy,
-  },
-  cashBtn: {
-    backgroundColor: COLORS.gold,
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  cashBtnText: {
-    color: COLORS.navy,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  mpesaBtn: {
-    backgroundColor: COLORS.navy,
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  mpesaBtnText: {
-    color: COLORS.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  receiptScrollContent: { padding: 24, alignItems: 'center', backgroundColor: '#F0F0F0' },
+  startNewOrderBtn: { backgroundColor: COLORS.navy, padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 16, width: '100%', maxWidth: 360 },
+  startNewOrderText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalCard: { backgroundColor: COLORS.white, borderRadius: 16, padding: 28, width: 380, alignItems: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: COLORS.navy, marginBottom: 6 },
+  modalSubtitle: { fontSize: 16, color: COLORS.gold, fontWeight: '700', marginBottom: 20 },
+  modalLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textDark, marginBottom: 8, alignSelf: 'flex-start' },
+  modalInput: { width: '100%', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, fontSize: 16, color: COLORS.textDark, marginBottom: 16 },
+  modalConfirmBtn: { width: '100%', backgroundColor: COLORS.navy, padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 10 },
+  modalConfirmText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+  modalCancelBtn: { width: '100%', backgroundColor: COLORS.background, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  modalCancelText: { color: COLORS.textGray, fontSize: 14, fontWeight: '600' },
+  header: { backgroundColor: COLORS.navy, paddingBottom: 16, paddingHorizontal: 24, paddingTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 74 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  logoBox: { width: 42, height: 42, backgroundColor: COLORS.gold, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  logoText: { color: COLORS.navy, fontWeight: '800', fontSize: 20 },
+  headerTitle: { color: COLORS.white, fontSize: 18, fontWeight: '700' },
+  headerSub: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
+  logoutBtn: { borderWidth: 1, borderColor: COLORS.gold, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
+  logoutText: { color: COLORS.gold, fontSize: 13, fontWeight: '600' },
+  body: { flexDirection: 'row', position: 'absolute', top: 74, left: 0, right: 0, bottom: 0 },
+  productsSection: { position: 'absolute', top: 0, left: 0, right: 340, bottom: 0, padding: 20 },
+  cartSection: { width: 340, backgroundColor: COLORS.white, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 0, borderLeftWidth: 1, borderLeftColor: COLORS.border, flexDirection: 'column', position: 'absolute', top: 0, right: 0, bottom: 0 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.navy, marginBottom: 16, flexShrink: 0 },
+  productRow: { flexDirection: 'row', marginBottom: 14, gap: 14 },
+  productCard: { flex: 1, backgroundColor: COLORS.white, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, position: 'relative' },
+  productCardActive: { borderColor: COLORS.gold, backgroundColor: '#FFFBF0' },
+  productImage: { width: 60, height: 60, borderRadius: 14, marginBottom: 10 },
+  productEmoji: { width: 60, height: 60, backgroundColor: COLORS.background, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  productEmojiText: { fontSize: 30 },
+  productName: { fontSize: 14, fontWeight: '600', color: COLORS.textDark, textAlign: 'center', marginBottom: 6, lineHeight: 20 },
+  productPrice: { fontSize: 15, color: COLORS.navy, fontWeight: '700', marginBottom: 2 },
+  productStock: { fontSize: 12, color: COLORS.textGray },
+  qtyBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: COLORS.gold, borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  qtyBadgeText: { fontSize: 12, fontWeight: '700', color: COLORS.navy },
+  emptyCart: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyCartEmoji: { fontSize: 52, marginBottom: 14 },
+  emptyCartText: { fontSize: 16, fontWeight: '600', color: COLORS.textGray, marginBottom: 4 },
+  emptyCartSub: { fontSize: 13, color: COLORS.textGray },
+  cartList: { flex: 1 },
+  cartItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  cartItemInfo: { flex: 1, marginRight: 10 },
+  cartItemName: { fontSize: 14, fontWeight: '600', color: COLORS.textDark, marginBottom: 3 },
+  cartItemPrice: { fontSize: 13, color: COLORS.gold, fontWeight: '700' },
+  cartItemControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  qtyBtn: { width: 32, height: 32, backgroundColor: COLORS.background, borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  qtyBtnText: { fontSize: 18, fontWeight: '700', color: COLORS.navy },
+  qtyText: { fontSize: 16, fontWeight: '700', color: COLORS.textDark, minWidth: 24, textAlign: 'center' },
+  removeBtn: { width: 32, height: 32, backgroundColor: '#FEE2E2', borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  removeBtnText: { fontSize: 13, fontWeight: '700', color: '#DC2626' },
+  cartFooter: { paddingTop: 16, paddingBottom: 20, borderTopWidth: 1, borderTopColor: COLORS.border, gap: 12, flexShrink: 0 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  totalLabel: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
+  totalValue: { fontSize: 24, fontWeight: '800', color: COLORS.navy },
+  cashBtn: { backgroundColor: COLORS.gold, padding: 16, borderRadius: 10, alignItems: 'center' },
+  cashBtnText: { color: COLORS.navy, fontSize: 15, fontWeight: '700' },
+  mpesaBtn: { backgroundColor: COLORS.navy, padding: 16, borderRadius: 10, alignItems: 'center' },
+  mpesaBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
 })
